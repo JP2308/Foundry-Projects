@@ -13,8 +13,8 @@ contract MyGovernorTest is Test {
     MyGovernor governor;
     Box box;
 
-    uint256 public constant MIN_DELAY = 3600; // 1 hour - after a vote passes, you have 1 hour before you can enact
-    uint256 public constant QUORUM_PERCENTAGE = 6; // Need 6% of voters to pass
+    uint256 public constant MIN_DELAY = 7200; // 1 day - after a vote passes, you have 1 day before you can enact
+    uint256 public constant QUORUM_PERCENTAGE = 1; // Need 1% of voters to pass
     uint256 public constant VOTING_PERIOD = 50400; // This is how long voting lasts
     uint256 public constant VOTING_DELAY = 1; // How many blocks till a proposal vote becomes active
 
@@ -34,15 +34,14 @@ contract MyGovernorTest is Test {
         vm.prank(VOTER);
         token.delegate(VOTER);
         timelock = new TimeLock(MIN_DELAY, proposers, executors);
-        token = new GovToken();
+        governor = new MyGovernor(token, timelock);
         bytes32 proposerRole = timelock.PROPOSER_ROLE();
         bytes32 executorRole = timelock.EXECUTOR_ROLE();
 
         timelock.grantRole(proposerRole, address(governor));
         timelock.grantRole(executorRole, address(0));
-        vm.stopPrank();
 
-        box = new Box(address(msg.sender));
+        box = new Box();
         box.transferOwnership(address(timelock));
     }
 
@@ -51,16 +50,17 @@ contract MyGovernorTest is Test {
         box.store(1);
     }
 
-    function testGovernanceUpdatesBox() public {
-        uint256 valuesToStore = 777;
-        string memory description = "Store 1 in Box";
+    function testGovernanceUpdatesBox() public { 
+        uint256 valueToStore = 777;
+        string memory description = "Store 777 in Box";
         bytes memory encodedFunctionCall = abi.encodeWithSignature(
             "store(uint256)",
-            valuesToStore
+            valueToStore
         );
         addressesToCall.push(address(box));
         values.push(0);
         functionCalls.push(encodedFunctionCall);
+
         // 1. Propose to the DAO
         uint256 proposalId = governor.propose(
             addressesToCall,
@@ -79,7 +79,7 @@ contract MyGovernorTest is Test {
         console.log("Proposal State:", uint256(governor.state(proposalId)));
 
         // 2. Vote
-        string memory reason = "I like a do da cha cha";
+        string memory reason = "I like to yeet";
         // 0 = Against, 1 = For, 2 = Abstain for this example
         uint8 voteWay = 1;
         vm.prank(VOTER);

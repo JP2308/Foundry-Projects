@@ -8,7 +8,7 @@ contract Box is Ownable {
 
     event numberChanged(uint256 newNumber);
 
-    constructor(address _owner) Ownable(_owner) {
+    constructor() Ownable(msg.sender) {
         // This constructor passes the initial owner address to the Ownable contract
     }
 
@@ -21,3 +21,5 @@ contract Box is Ownable {
         return s_number;
     }
 }
+
+// 0xCFFc004AC186cccc7Dd369800C83B0D0922A6d09
